@@ -3,80 +3,67 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>TaskList Viewer</title>
+<title>TaskList</title>
 <style>
   body { font-family: Arial, sans-serif; margin: 20px; }
   h1 { text-align: center; }
-  ul { list-style-type: none; padding: 0; }
-  li { background: #f4f4f4; margin: 8px 0; padding: 12px; border-radius: 6px; }
-  .title { font-weight: bold; }
-  .dates { color: #555; }
-  .status { color: #d00; font-weight: bold; }
+  table { border-collapse: collapse; width: 100%; margin-top: 20px; }
+  th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+  th { background-color: #f2f2f2; }
 </style>
 </head>
 <body>
 
 <h1>TaskList</h1>
-<ul id="taskListContainer"></ul>
+
+<table id="taskTable">
+  <thead>
+    <tr>
+      <th>Start Date</th>
+      <th>End Date</th>
+      <th>Title</th>
+      <th>Description</th>
+      <th>Status</th>
+    </tr>
+  </thead>
+  <tbody>
+    <!-- Task rows will go here -->
+  </tbody>
+</table>
 
 <script>
-// Replace this URL with your GitHub raw JSON URL
-https://raw.githubusercontent.com/jerebandley-png/tasklist-app/refs/heads/main/index.html?token=GHSAT0AAAAAADRHJX5XNFN5XEE45KXME26C2KQSEIQ
+  // Fetch the JSON file
+  fetch('tasklist.json')
+    .then(response => {
+      if (!response.ok) throw new Error('Failed to fetch tasklist.json');
+      return response.json();
+    })
+    .then(data => {
+      // Sort tasks by StartDate ascending
+      data.sort((a, b) => new Date(a.StartDate) - new Date(b.StartDate));
 
-async function loadTasks() {
-    try {
-        const response = await fetch(jsonUrl);
-        if (!response.ok) throw new Error("Failed to fetch JSON.");
-        const data = await response.json();
+      const tbody = document.querySelector('#taskTable tbody');
+      data.forEach(task => {
+        const tr = document.createElement('tr');
 
-        // Sort tasks by StartDate ascending
-        data.sort((a, b) => new Date(a.StartDate) - new Date(b.StartDate));
+        const startDate = task.StartDate ? new Date(task.StartDate).toLocaleDateString() : '';
+        const endDate = task.EndDate ? new Date(task.EndDate).toLocaleDateString() : '';
 
-        const container = document.getElementById("taskListContainer");
-        container.innerHTML = "";
-
-        data.forEach(task => {
-            const li = document.createElement("li");
-
-            const title = document.createElement("div");
-            title.className = "title";
-            title.textContent = task.Title || "";
-
-            const dates = document.createElement("div");
-            dates.className = "dates";
-            let start = task.StartDate ? new Date(task.StartDate).toLocaleDateString() : "";
-            let end = task.EndDate ? new Date(task.EndDate).toLocaleDateString() : "";
-            if (start && end && start !== end) {
-                dates.textContent = start + " – " + end;
-            } else {
-                dates.textContent = start;
-            }
-
-            const status = document.createElement("div");
-            status.className = "status";
-            status.textContent = task.Status || "";
-
-            li.appendChild(dates);
-            li.appendChild(title);
-            li.appendChild(status);
-
-            if (task.Description) {
-                const desc = document.createElement("div");
-                desc.textContent = task.Description;
-                desc.style.marginTop = "4px";
-                li.appendChild(desc);
-            }
-
-            container.appendChild(li);
-        });
-
-    } catch (err) {
-        console.error(err);
-        document.getElementById("taskListContainer").textContent = "Error loading tasks.";
-    }
-}
-
-loadTasks();
+        tr.innerHTML = `
+          <td>${startDate}</td>
+          <td>${endDate}</td>
+          <td>${task.Title || ''}</td>
+          <td>${task.Description || ''}</td>
+          <td>${task.Status || ''}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    })
+    .catch(err => {
+      console.error(err);
+      const tbody = document.querySelector('#taskTable tbody');
+      tbody.innerHTML = '<tr><td colspan="5">Failed to load TaskList JSON.</td></tr>';
+    });
 </script>
 
 </body>
