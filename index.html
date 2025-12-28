@@ -24,7 +24,6 @@
       padding: 14px;
       margin-bottom: 12px;
       box-shadow: 0 2px 6px rgba(0,0,0,0.08);
-      cursor: pointer;
     }
 
     .task-date {
@@ -39,11 +38,10 @@
       margin-bottom: 6px;
     }
 
-    .task-desc, .task-time {
+    .task-desc, .task-time, .task-status {
       color: #555;
       margin-bottom: 6px;
       white-space: pre-wrap;
-      display: none;
     }
 
     .task-status {
@@ -64,6 +62,16 @@
 <div id="taskContainer"></div>
 
 <script>
+function formatTime(decimalTime) {
+  if (!decimalTime && decimalTime !== 0) return "";
+  const totalMinutes = Math.round(decimalTime * 24 * 60);
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+  const ampm = hours >= 12 ? "PM" : "AM";
+  const displayHour = hours % 12 === 0 ? 12 : hours % 12;
+  return displayHour + ":" + (minutes < 10 ? "0" : "") + minutes + " " + ampm;
+}
+
 fetch("tasklist.json")
   .then(res => res.json())
   .then(data => {
@@ -81,32 +89,28 @@ fetch("tasklist.json")
         ? " → " + new Date(task.EndDate).toLocaleDateString()
         : "";
 
+      // Time or All Day
+      let timeText = "";
+      if (task.IsAllDay === "TRUE" || task.IsAllDay === true) {
+        timeText = "All Day";
+      } else {
+        const st = formatTime(task.StartTime);
+        const et = formatTime(task.EndTime);
+        if (st && et) timeText = `${st} – ${et}`;
+        else if (st) timeText = st;
+      }
+
       const statusClass = task.Status && task.Status.toLowerCase() !== "open"
         ? "task-status closed"
         : "task-status";
 
-      // Determine time / all-day
-      const startTime = task.StartTime || "";
-      const endTime = task.EndTime || "";
-      const timeText = task.IsAllDay === "TRUE" || task.IsAllDay === true
-        ? "All Day"
-        : (startTime && endTime ? `${startTime} – ${endTime}` : startTime);
-
       card.innerHTML = `
         <div class="task-date">${start}${end}</div>
         <div class="task-title">${task.Title || ""}</div>
-        ${task.Status ? `<div class="${statusClass}">Status: ${task.Status}</div>` : ""}
         ${task.Description ? `<div class="task-desc">${task.Description}</div>` : ""}
-        <div class="task-time">${timeText}</div>
+        ${timeText ? `<div class="task-time">${timeText}</div>` : ""}
+        ${task.Status ? `<div class="${statusClass}">Status: ${task.Status}</div>` : ""}
       `;
-
-      // Toggle description & time on tap
-      card.addEventListener("click", () => {
-        const desc = card.querySelector(".task-desc");
-        const time = card.querySelector(".task-time");
-        if (desc) desc.style.display = desc.style.display === "none" ? "block" : "none";
-        if (time) time.style.display = time.style.display === "none" ? "block" : "none";
-      });
 
       container.appendChild(card);
     });
