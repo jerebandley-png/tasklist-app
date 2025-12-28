@@ -72,10 +72,15 @@ function formatTime(decimalTime) {
   return displayHour + ":" + (minutes < 10 ? "0" : "") + minutes + " " + ampm;
 }
 
-fetch("tasklist.json")
+fetch("tasklist.json?ts=" + new Date().getTime())
   .then(res => res.json())
   .then(data => {
-    const container = document.getElementById("taskContainer");
+    // existing code
+  })
+  .catch(err => {
+    console.error("Failed to load tasklist.json", err);
+  });
+
 
     // Sort ascending by StartDate
     data.sort((a, b) => new Date(a.StartDate) - new Date(b.StartDate));
