@@ -12,12 +12,10 @@
       padding: 12px;
       background: #f4f6f8;
     }
-
     h1 {
       text-align: center;
       margin-bottom: 16px;
     }
-
     .task-card {
       background: white;
       border-radius: 10px;
@@ -25,31 +23,26 @@
       margin-bottom: 12px;
       box-shadow: 0 2px 6px rgba(0,0,0,0.08);
     }
-
     .task-date {
       font-weight: 600;
       color: #333;
       margin-bottom: 6px;
     }
-
     .task-title {
       font-size: 1.1em;
       font-weight: 700;
       margin-bottom: 6px;
     }
-
     .task-desc, .task-time, .task-status {
       color: #555;
       margin-bottom: 6px;
       white-space: pre-wrap;
     }
-
     .task-status {
       font-size: 0.9em;
       font-weight: 600;
       color: #007700;
     }
-
     .task-status.closed {
       color: #666;
     }
@@ -63,7 +56,7 @@
 
 <script>
 function formatTime(decimalTime) {
-  if (!decimalTime && decimalTime !== 0) return "";
+  if (decimalTime === "" || decimalTime === null || decimalTime === undefined) return "";
   const totalMinutes = Math.round(decimalTime * 24 * 60);
   const hours = Math.floor(totalMinutes / 60);
   const minutes = totalMinutes % 60;
@@ -73,14 +66,12 @@ function formatTime(decimalTime) {
 }
 
 fetch("tasklist.json?ts=" + new Date().getTime())
-  .then(res => res.json())
-  .then(data => {
-    // existing code
+  .then(res => {
+    if (!res.ok) throw new Error("Failed to fetch tasklist.json");
+    return res.json();
   })
-  .catch(err => {
-    console.error("Failed to load tasklist.json", err);
-  });
-
+  .then(data => {
+    const container = document.getElementById("taskContainer");
 
     // Sort ascending by StartDate
     data.sort((a, b) => new Date(a.StartDate) - new Date(b.StartDate));
