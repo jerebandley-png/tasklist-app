@@ -1,69 +1,103 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>TaskList</title>
-<style>
-  body { font-family: Arial, sans-serif; margin: 20px; }
-  h1 { text-align: center; }
-  table { border-collapse: collapse; width: 100%; margin-top: 20px; }
-  th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
-  th { background-color: #f2f2f2; }
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TaskList</title>
+
+  <style>
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      margin: 0;
+      padding: 12px;
+      background: #f4f6f8;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 16px;
+    }
+
+    .task-card {
+      background: white;
+      border-radius: 10px;
+      padding: 14px;
+      margin-bottom: 12px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+    }
+
+    .task-date {
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 6px;
+    }
+
+    .task-title {
+      font-size: 1.1em;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    .task-desc {
+      color: #555;
+      margin-bottom: 6px;
+      white-space: pre-wrap;
+    }
+
+    .task-status {
+      font-size: 0.9em;
+      font-weight: 600;
+      color: #007700;
+    }
+
+    .task-status.closed {
+      color: #666;
+    }
+  </style>
 </head>
 <body>
 
 <h1>TaskList</h1>
 
-<table id="taskTable">
-  <thead>
-    <tr>
-      <th>Start Date</th>
-      <th>End Date</th>
-      <th>Title</th>
-      <th>Description</th>
-      <th>Status</th>
-    </tr>
-  </thead>
-  <tbody>
-    <!-- Task rows will go here -->
-  </tbody>
-</table>
+<div id="taskContainer"></div>
 
 <script>
-  // Fetch the JSON file
-  fetch('tasklist.json')
-    .then(response => {
-      if (!response.ok) throw new Error('Failed to fetch tasklist.json');
-      return response.json();
-    })
-    .then(data => {
-      // Sort tasks by StartDate ascending
-      data.sort((a, b) => new Date(a.StartDate) - new Date(b.StartDate));
+fetch("tasklist.json")
+  .then(res => res.json())
+  .then(data => {
+    const container = document.getElementById("taskContainer");
 
-      const tbody = document.querySelector('#taskTable tbody');
-      data.forEach(task => {
-        const tr = document.createElement('tr');
+    // Sort ascending by StartDate
+    data.sort((a, b) => new Date(a.StartDate) - new Date(b.StartDate));
 
-        const startDate = task.StartDate ? new Date(task.StartDate).toLocaleDateString() : '';
-        const endDate = task.EndDate ? new Date(task.EndDate).toLocaleDateString() : '';
+    data.forEach(task => {
+      const card = document.createElement("div");
+      card.className = "task-card";
 
-        tr.innerHTML = `
-          <td>${startDate}</td>
-          <td>${endDate}</td>
-          <td>${task.Title || ''}</td>
-          <td>${task.Description || ''}</td>
-          <td>${task.Status || ''}</td>
-        `;
-        tbody.appendChild(tr);
-      });
-    })
-    .catch(err => {
-      console.error(err);
-      const tbody = document.querySelector('#taskTable tbody');
-      tbody.innerHTML = '<tr><td colspan="5">Failed to load TaskList JSON.</td></tr>';
+      const start = task.StartDate ? new Date(task.StartDate).toLocaleDateString() : "";
+      const end = task.EndDate && task.EndDate !== task.StartDate
+        ? " → " + new Date(task.EndDate).toLocaleDateString()
+        : "";
+
+      const statusClass = task.Status && task.Status.toLowerCase() !== "open"
+        ? "task-status closed"
+        : "task-status";
+
+      card.innerHTML = `
+        <div class="task-date">${start}${end}</div>
+        <div class="task-title">${task.Title || ""}</div>
+        ${task.Description ? `<div class="task-desc">${task.Description}</div>` : ""}
+        ${task.Status ? `<div class="${statusClass}">Status: ${task.Status}</div>` : ""}
+      `;
+
+      container.appendChild(card);
     });
+  })
+  .catch(err => {
+    document.getElementById("taskContainer").innerText =
+      "Failed to load tasklist.json";
+    console.error(err);
+  });
 </script>
 
 </body>
